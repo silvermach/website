@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Engine Validation Suite — Silver Mach</title>
+<link rel="icon" type="image/png" href="./assets/logo.png">
+<style>
+  :root{--black:#060708;--panel:#0f1216;--silver:#d2d7dd;--silver-dim:#868c95;
+        --cyan:#2ad6ee;--line:#1f242b;--pass:#39d98a;--fail:#ff6b78;--gold:#e8b64c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--black);color:var(--silver);padding:40px 24px;line-height:1.6;
+       font-family:'Inter',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-size:26px;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+  .sub{color:var(--silver-dim);font-size:14px;margin-bottom:8px}
+  .back{display:inline-block;margin-bottom:26px;font-size:13px;color:var(--cyan);text-decoration:none;
+        border:1px solid var(--line);padding:7px 14px;border-radius:20px}
+  .back:hover{border-color:var(--cyan)}
+  #summary{margin:22px 0;padding:18px 22px;border-radius:12px;border:1px solid var(--line);
+           background:var(--panel);font-size:16px;font-weight:600}
+  #summary.ok{border-color:var(--pass);color:var(--pass)}
+  #summary.bad{border-color:var(--fail);color:var(--fail)}
+  #summary.busy{color:var(--gold);border-color:var(--gold)}
+  .group{margin-top:24px}
+  .group>h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);
+            margin-bottom:8px;font-weight:600}
+  .case{display:flex;gap:12px;padding:5px 0;font-size:13.5px;border-bottom:1px solid rgba(31,36,43,.5)}
+  .tag{flex:0 0 44px;font-weight:700;font-size:11px;letter-spacing:1px;padding-top:2px}
+  .pass .tag{color:var(--pass)}
+  .fail .tag{color:var(--fail)}
+  .case .msg{color:var(--fail);font-size:12.5px;display:block;margin-top:3px;
+             font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .name{color:var(--silver)}
+  .fail .name{color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./index.html">← Back to the site</a>
+  <h1>Engineering Analysis Suite — Engine Validation</h1>
+  <p class="sub">
+    Runs the full assertion suite against the computational engine in this browser.
+    No Node.js, no build step: the engine modules are loaded as ordinary scripts,
+    exactly as the live site loads them.
+  </p>
+  <div id="summary" class="busy">Running…</div>
+  <div id="results"></div>
+</div>
+
+<!-- Engine modules, dependency order, relative paths. tests.js must come last. -->
+<script src="./js/engine/utils.js"></script>
+<script src="./js/engine/statistics.js"></script>
+<script src="./js/engine/monteCarlo.js"></script>
+<script src="./js/engine/pareto.js"></script>
+<script src="./js/engine/genealogy.js"></script>
+<script src="./js/engine/charts.js"></script>
+<script src="./js/engine/treeRenderer.js"></script>
+<script src="./js/engine/export.js"></script>
+<script src="./js/engine/tests.js"></script>
+<script>
+(function () {
+  'use strict';
+  var summary = document.getElementById('summary');
+  var results = document.getElementById('results');
+
+  function escapeHTML(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  SM.Tests.run().then(function (report) {
+    var byGroup = {};
+    var order = [];
+    SM.Tests.results.forEach(function (entry) {
+      if (!byGroup[entry.group]) { byGroup[entry.group] = []; order.push(entry.group); }
+      byGroup[entry.group].push(entry);
+    });
+
+    var html = '';
+    order.forEach(function (group) {
+      html += '<div class="group"><h2>' + escapeHTML(group) + '</h2>';
+      byGroup[group].forEach(function (entry) {
+        html += '<div class="case ' + (entry.pass ? 'pass' : 'fail') + '">' +
+                  '<span class="tag">' + (entry.pass ? 'PASS' : 'FAIL') + '</span>' +
+                  '<span class="name">' + escapeHTML(entry.name) +
+                    (entry.pass ? '' : '<span class="msg">' + escapeHTML(entry.error) + '</span>') +
+                  '</span>' +
+                '</div>';
+      });
+      html += '</div>';
+    });
+    results.innerHTML = html;
+
+    var passed = report.total - report.failed;
+    summary.className = report.failed === 0 ? 'ok' : 'bad';
+    summary.textContent = passed + ' passed · ' + report.failed + ' failed · ' +
+                          report.total + ' total';
+  }).catch(function (err) {
+    summary.className = 'bad';
+    summary.textContent = 'Suite could not run: ' + err.message;
+    if (window.console) console.error(err);
+  });
+})();
+</script>
+</body>
+</html>
