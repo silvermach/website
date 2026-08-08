@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Silver Mach — STEM Racing</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<link rel="stylesheet" href="./css/styles.css">
+<link rel="icon" type="image/png" href="./assets/logo-silvermach.png">
+</head>
+<body id="top">
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="grain"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <img class="logo" id="nav-logo" src="./assets/logo-silvermach.png" alt="SilverMach logo" />
+      SILVER MACH
+    </a>
+    <div class="nav-links">
+      <a href="#mission">Mission</a>
+      <a href="#insights">Car &amp; Insights</a>
+      <a href="#engineering">Engineering</a>
+      <a href="#parts">Parts</a>
+      <a href="#team">Team</a>
+      <a href="#reflection">Reflection</a>
+      <a href="#sponsors">Sponsors</a>
+      <a href="#countdown">Countdown</a>
+      <a href="greenmach.html">GreenMach</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="tagline"><span class="dot"></span>STEM Racing Open Nationals 2026 • Endorsed by F1</div>
+      <h1>SILVER <span class="mach">MACH</span></h1>
+      <p>A competitive STEM Racing team engineering, manufacturing, and racing a miniature Formula 1 car — while running the enterprise, branding, and sponsorship of a full motorsport outfit.</p>
+      <div class="award-badge"><span class="medal">★</span> Best Identity Award — National Qualifiers</div><br/>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="#insights">Explore Our Car</a>
+        <a class="btn btn-ghost" href="#team">Meet the Team</a>
+      </div>
+    </div>
+    <div class="hero-mark">
+      <img id="hero-logo" src="./assets/logo-silvermach.png" alt="SilverMach emblem" />
+    </div>
+  </div>
+  <div class="scroll-cue">Scroll<div class="bar"></div></div>
+</header>
+
+<!-- MISSION -->
+<section id="mission">
+  <div class="wrap">
+    <div class="eyebrow fade">What Is SilverMach?</div>
+    <h2 class="section-title fade">Build, breathe <span>and bleed speed.</span></h2>
+    <p class="lead fade">SilverMach is a competitive STEM Racing team competing at the STEM Racing Open Nationals 2026 — a national-level stage of the world's largest student engineering competition, endorsed by Formula 1. Beyond designing and racing a miniature F1 car, we operate across engineering, manufacturing, enterprise, branding, marketing, sponsorship acquisition, stakeholder engagement, and project management, proving that success in engineering comes from combining innovation, collaboration, communication, and leadership.</p>
+    <p class="lead fade" style="margin-top:18px">Our mission is to innovate, design, and optimise high performance engineering solutions through technical excellence, data driven development, and teamwork, demonstrating what young engineers can achieve through STEM Racing.</p>
+    <div class="mission-cards">
+      <div class="mcard fade">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2 L14 9 L21 9 L15.5 13.2 L17.5 20.2 L12 16 L6.5 20.2 L8.5 13.2 L3 9 L10 9 Z"/></svg></div>
+        <h3>Precision</h3>
+        <p>Every measurement and design decision is held to a standard where the smallest detail can decide the race.</p>
+      </div>
+      <div class="mcard fade">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3c4 3 6 6 6 10a6 6 0 0 1-12 0c0-2 1-4 3-6"/><path d="M12 21V11"/></svg></div>
+        <h3>Innovation</h3>
+        <p>We approach every challenge with creative problem-solving, always looking for the smarter, faster way forward.</p>
+      </div>
+      <div class="mcard fade">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+        <h3>Performance</h3>
+        <p>Technical excellence and continuous improvement drive everything from our CAD models to our race-day execution.</p>
+      </div>
+      <div class="mcard fade">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 21V4h11l-1.5 4L16 12H5"/><path d="M5 4v17"/></svg></div>
+        <h3>Professionalism</h3>
+        <p>Inspired by modern motorsport teams, we bring strategic planning and professional execution to every discipline we touch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D CAR + INSIGHTS -->
+<section id="insights">
+  <div class="wrap">
+    <div class="eyebrow fade">STEM Racing Insights</div>
+    <h2 class="section-title fade">Spin the car. <span>Explore every part.</span></h2>
+    <p class="lead fade">An interactive engineering model of our Open Nationals car. Drag to rotate or tap a part below — each component links its engineering to sustainability and to how we use it for STEM outreach.</p>
+
+    <div class="car-stage fade">
+      <span class="stage-corner sc-tl"></span><span class="stage-corner sc-br"></span>
+      <div class="car-hint">Our actual CAD design • drag to rotate</div>
+      <canvas id="car-canvas"></canvas>
+      <div id="car-fallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:30px">
+        <svg viewBox="0 0 420 150" style="width:min(90%,420px);height:auto;filter:drop-shadow(0 0 24px rgba(42,214,238,.35))">
+          <g fill="none" stroke="#2ad6ee" stroke-width="2">
+            <path d="M20 105 H70 l8 -22 q4 -10 16 -10 H150 q14 0 18 -16 l3 -10 q3 -10 14 -10 H300 q16 0 20 14 l8 30 q3 12 18 12 H400" stroke="#d2d7dd"/>
+            <path d="M150 67 q20 -4 40 0" />
+            <path d="M380 60 V40 H410 V60" stroke="#d2d7dd"/>
+            <path d="M14 102 H72" stroke="#d2d7dd"/>
+          </g>
+          <circle cx="120" cy="112" r="26" fill="#0b0c0e" stroke="#d2d7dd" stroke-width="3"/>
+          <circle cx="120" cy="112" r="10" fill="#2ad6ee"/>
+          <circle cx="300" cy="112" r="26" fill="#0b0c0e" stroke="#d2d7dd" stroke-width="3"/>
+          <circle cx="300" cy="112" r="10" fill="#2ad6ee"/>
+        </svg>
+        <div style="color:#868c95;font-size:13px;font-family:var(--font-display);letter-spacing:1px">3D view needs WebGL — use the part buttons below to explore.</div>
+      </div>
+      <div class="part-tabs" id="part-tabs"></div>
+    </div>
+
+    <div class="part-detail fade">
+      <div id="pd-name">Aerodynamic Body</div>
+      <div id="pd-sub">Chassis &amp; Bodywork</div>
+      <div class="pd-grid">
+        <div class="pd-box tech"><h4>Engineering Function</h4><p id="pd-tech"></p></div>
+        <div class="pd-box manufacture"><h4>Manufacturing Method</h4><p id="pd-manufacture"></p></div>
+        <div class="pd-box sustain"><h4>Sustainability Impact</h4><p id="pd-sustain"></p></div>
+        <div class="pd-box material"><h4>Material Choice</h4><p id="pd-material"></p></div>
+        <div class="pd-box"><h4>STEM Outreach Application</h4><p id="pd-outreach"></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINEERING ANALYSIS SUITE -->
+<section id="engineering">
+  <div class="wrap">
+    <div class="eyebrow fade">Engineering Analysis Suite</div>
+    <h2 class="section-title fade">Simulate the risk. <span>Engineer with data.</span></h2>
+    <p class="lead fade">Two tools straight from our design process: a Monte Carlo race-time simulator that models real-world uncertainty in every input, and a decision-lineage tracker that documents why each design iteration evolved and was selected.</p>
+
+    <div class="eng-alert" id="eng-alert" style="display:none" role="status" aria-live="polite"></div>
+
+    <div class="eng-tabs fade">
+      <button class="eng-tab-btn active" data-tool="monte" onclick="selectEngTool('monte')">Monte Carlo Race Simulator</button>
+      <button class="eng-tab-btn" data-tool="lineage" onclick="selectEngTool('lineage')">Engineering Decision Lineage</button>
+    </div>
+
+    <!-- MONTE CARLO SIMULATOR -->
+    <div class="eng-tool active" id="tool-monte">
+      <div class="mc-grid">
+        <div class="glass mc-inputs">
+          <div class="eng-h4">Simulation Inputs</div>
+          <div class="eng-sub">Every parameter is drawn independently for each trial by a Box–Muller transform. Mass, drag, peak thrust, reaction time and μ use a <b>truncated</b> normal — a draw that falls below its physical bound is rejected and redrawn rather than clamped — while the four toe angles use a plain signed normal about 0°, so toe-in and toe-out are equally likely. Hover any field for what it means and how it reaches the solver.</div>
+          <div class="field-grid">
+            <div class="field-row">
+              <div class="field"><label>Vehicle Mass (g)</label><input type="number" id="mc-mass-mean" title="Nominal mass of the assembled car, in grams. Converted once to kilograms at the sampling boundary and used as m in a = F/m. Heavier cars accelerate less for the same thrust, so race time rises. Sampled per trial." value="60" step="0.1"></div>
+              <div class="field"><label>± σ (g)</label><input type="number" id="mc-mass-sigma" title="Standard deviation of car mass, in grams. Each trial draws mass from a TRUNCATED normal N(mean, sigma) bounded below at 1e-6 g by rejection sampling, so a draw can never be zero or negative. Larger sigma = simulated cars vary more in mass from trial to trial, which widens the spread of race times; sigma = 0 fixes mass at the nominal value." value="2" step="0.1"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Drag Coefficient</label><input type="number" id="mc-drag-mean" title="Nominal aerodynamic drag coefficient Cd (dimensionless). Enters k = 0.5*rho*Cd*A, and the drag force is k*v^2. Higher Cd costs more speed the faster the car goes. Sampled per trial." value="0.28" step="0.001"></div>
+              <div class="field"><label>± σ</label><input type="number" id="mc-drag-sigma" title="Standard deviation of Cd (dimensionless). Drawn per trial from a TRUNCATED normal bounded below at 0 by rejection sampling, so drag can never be negative. Larger sigma = more variation in how cleanly each simulated car cuts the air, so more spread in race time." value="0.02" step="0.001"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Peak Thrust F₀ (N)</label><input type="number" id="mc-force-mean" title="Peak thrust F0 at t = 0, in newtons. Not a free number: F0 = (m_CO2 * v_e) / tau = (0.008 kg * 200 m/s) / 0.08 s = 20.0 N. Sampled per trial. Higher F0 accelerates the car harder and lowers race time." value="20" step="0.1"></div>
+              <div class="field"><label>± σ (N)</label><input type="number" id="mc-force-sigma" title="Standard deviation of peak thrust, in newtons. Drawn per trial from a TRUNCATED normal bounded below at 1e-6 N by rejection sampling. Larger sigma = canister-to-canister variation is bigger, so race times spread out; this is usually one of the strongest drivers of the spread." value="1" step="0.1"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Reaction Time (s)</label><input type="number" id="mc-react-mean" title="Nominal driver/launch reaction time, in seconds. Added to the travel time AFTER the physics: finish = travel + reaction. It is a time offset, not a force, so it shifts every race time without changing the car's motion." value="0.15" step="0.01"></div>
+              <div class="field"><label>± σ (s)</label><input type="number" id="mc-react-sigma" title="Standard deviation of reaction time, in seconds. Drawn per trial from a TRUNCATED normal bounded below at 0 by rejection sampling, so a negative reaction is impossible. Larger sigma = less consistent launches and a wider spread of finish times." value="0.02" step="0.005"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Front Left Toe ± σ (°)</label><input type="number" id="mc-wheel-sigma-fl" title="Standard deviation of the FRONT-LEFT static TOE angle, in degrees. This wheel is drawn independently from N(0 deg, sigma_FL) by a Box-Muller transform; the draw is signed and NOT truncated, so toe-out (+) and toe-in (-) are equally likely. Its own scrub force is mu * (m*g/4) * |sin(toe_FL)| newtons, computed for this wheel alone and only then added to the other three. Larger sigma = this corner is more often misaligned, adding a constant retarding force." value="0.5" step="0.05" min="0" max="30"></div>
+              <div class="field"><label>Front Right Toe ± σ (°)</label><input type="number" id="mc-wheel-sigma-fr" title="Standard deviation of the FRONT-RIGHT static TOE angle, in degrees. Drawn independently from N(0 deg, sigma_FR) - a separate random number from the other three corners. Its scrub force is mu * (m*g/4) * |sin(toe_FR)|, computed alone and only then summed. Larger sigma = more misalignment at this corner and a slower car." value="0.5" step="0.05" min="0" max="30"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Rear Left Toe ± σ (°)</label><input type="number" id="mc-wheel-sigma-rl" title="Standard deviation of the REAR-LEFT static TOE angle, in degrees. Drawn independently from N(0 deg, sigma_RL). Its scrub force is mu * (m*g/4) * |sin(toe_RL)|, computed alone and only then summed. Set this to 0 to model a perfectly aligned rear-left corner while leaving the other three uncertain." value="0.5" step="0.05" min="0" max="30"></div>
+              <div class="field"><label>Rear Right Toe ± σ (°)</label><input type="number" id="mc-wheel-sigma-rr" title="Standard deviation of the REAR-RIGHT static TOE angle, in degrees. Drawn independently from N(0 deg, sigma_RR). Its scrub force is mu * (m*g/4) * |sin(toe_RR)|, computed alone and only then summed. The four raw angles are never added together - only the four forces are." value="0.5" step="0.05" min="0" max="30"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Thrust Decay τ (s)</label><input type="number" id="mc-tau" title="Thrust decay time constant tau, in seconds. Thrust follows F(t) = F0 * exp(-t/tau), truncated at 5*tau. Smaller tau = a harder, shorter shove (same F0, less total impulse delivered before cut-off) and a slower car; larger tau = the push lasts longer. Deterministic - not sampled." value="0.08" step="0.005" min="0.005" max="5"></div>
+              <div class="field"><label>Thrust Angle θ (°)</label><input type="number" id="mc-thrust-angle" title="Thrust misalignment theta, in degrees from the car's longitudinal axis. Only the forward component drives the car: F_forward = F(t) * cos(theta). At 0 deg all thrust is useful; at 60 deg only half is. Deterministic - not sampled." value="0" step="0.5" min="-89" max="89"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Track Length (m)</label><input type="number" id="mc-track" title="Race distance, in metres. The solver integrates until x >= track length and interpolates the exact crossing time. Longer track = longer race time, and more of it spent coasting against drag and scrub. Deterministic - not sampled." value="20" step="0.5"></div>
+              <div class="field"><label>Coefficient of Friction μ</label><input type="number" id="mc-friction-mean" title="Coefficient of friction mu (dimensionless) used for wheel scrub. It multiplies every wheel's normal load in F_scrub,i = mu * N_i * |sin(toe_i)|. ASSUMED, NOT MEASURED - the project holds no friction measurement. Higher mu = misaligned wheels cost more, so the car is slower." value="0.30" step="0.01" min="0" max="2"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>μ ± σ</label><input type="number" id="mc-friction-sigma" title="Standard deviation of mu (dimensionless). Defaults to 0 because no friction measurement exists and inventing a spread would be fabricating data. At 0, mu is held at its nominal value on every trial and no random number is drawn. Above 0, mu is drawn per trial from a TRUNCATED normal bounded below at 0, exactly like the other inputs." value="0" step="0.01" min="0" max="1"></div>
+              <div class="field"><label>Number of Simulations</label><input type="number" id="mc-runs" title="Number of independent Monte Carlo trials. Does not change the physics - it changes how precisely the statistics are estimated. More trials = a smoother histogram and a tighter confidence interval on the mean, at the cost of runtime." value="10000" step="100" min="100" max="200000"></div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:22px">
+            <button class="btn btn-primary" id="mc-run" onclick="runMonteCarlo()">Run 10,000-Trial Simulation</button>
+            <button class="btn btn-ghost" onclick="resetMonteCarloDefaults()">Reset Defaults</button>
+          </div>
+          <div class="mc-note">Model: an 8&nbsp;g CO₂ canister delivers a <b>time-dependent</b> thrust
+            F(t)&nbsp;=&nbsp;F₀e<sup>−t/τ</sup> (choked blowdown), acting along the car's axis via
+            cos&nbsp;θ. Four independent wheel toe angles add a scrub retard, and quadratic aerodynamic
+            drag opposes motion throughout. τ, θ and the exhaust velocity behind F₀ are
+            <b>engineering assumptions, not measurements</b> — the team holds no test-stand data.
+            Tick “Show thrust curve” to see the exact F(t) the simulation integrates. All computation
+            runs client-side in your browser.</div>
+        </div>
+        <div class="glass mc-stats">
+          <div class="eng-h4">Result Statistics</div>
+          <div class="eng-sub" id="mc-status">Run the simulation to populate results.</div>
+          <div class="stat-grid" id="mc-stat-grid">
+            <div class="stat-tile"><div class="stat-lbl">Mean</div><div class="stat-val" id="st-mean">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Median</div><div class="stat-val" id="st-median">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Std. Deviation</div><div class="stat-val" id="st-stdev">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Fastest</div><div class="stat-val" id="st-fastest">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Slowest</div><div class="stat-val" id="st-slowest">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Mode (binned)</div><div class="stat-val" id="st-mode">—</div></div>
+            <div class="stat-tile"><div class="stat-lbl">Range</div><div class="stat-val" id="st-range">—</div></div>
+            <div class="stat-tile wide"><div class="stat-lbl">Variance</div><div class="stat-val" id="st-variance">—</div></div>
+            <div class="stat-tile wide"><div class="stat-lbl">95% CI of the Mean (estimate precision)</div><div class="stat-val" id="st-ci-mean">—</div></div>
+            <div class="stat-tile wide"><div class="stat-lbl">95% Outcome Interval (2.5–97.5th percentile)</div><div class="stat-val" id="st-ci">—</div></div>
+            <div class="stat-tile prob"><div class="stat-lbl">P(finish &lt; 1.00 s)</div><div class="stat-val" id="st-p100">—</div></div>
+            <div class="stat-tile prob"><div class="stat-lbl">P(finish &lt; 0.95 s)</div><div class="stat-val" id="st-p095">—</div></div>
+            <div class="stat-tile prob wide"><div class="stat-lbl">P(finish &lt; 0.90 s)</div><div class="stat-val" id="st-p090">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-charts">
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Finish-Time Histogram + Normal Fit</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-hist','histogram')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-hist"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Normal (Bell Curve) Fit</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-bell','bell-curve')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-bell"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Cumulative Distribution (CDF)</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-cdf','cdf')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-cdf"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Normal Q–Q Plot</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-qq','qq-plot')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-qq"></canvas></div>
+        </div>
+      </div>
+
+      <div class="glass chart-card" id="thrust-card" style="display:none;margin-top:20px">
+        <div class="chart-card-head">
+          <h4>Thrust Decay Curve — F(t) used by this simulation</h4>
+          <button type="button" class="btn-mini" onclick="exportChartPNG('chart-thrust','thrust-curve')">PNG</button>
+        </div>
+        <div class="chart-box"><canvas id="chart-thrust"></canvas></div>
+        <div class="thrust-meta">
+          <code id="thrust-equation">—</code>
+          <span id="thrust-params">—</span>
+        </div>
+        <div class="mc-note">Plotted from the same <code>SM.Thrust</code> module the solver integrates —
+          there is no second copy of the equation, so this curve cannot disagree with the physics above.
+          τ and the exhaust velocity that sets F₀ are engineering assumptions; no measured thrust data exists.
+          The solver integrates ΣF = F₀·cos θ·e<sup>−t/τ</sup> − ½ρC<sub>d</sub>Av² − Σᵢ μN<sub>i</sub>|sin δ<sub>i</sub>| with RK4,
+          so the only two resistance mechanisms modelled are aerodynamic drag and per-wheel scrub.
+          Rolling resistance, axle/bearing friction and wheel rotational inertia are <b>not</b> implemented —
+          the project holds no measurement for any of them, so none has been assumed.</div>
+      </div>
+
+      <div class="glass percentile-card">
+        <div class="eng-h4">Percentile &amp; Distribution Shape</div>
+        <div class="eng-sub">Derived from the same trial array as the statistics above — a straight Q–Q plot together with skewness and excess kurtosis near zero indicates a normally distributed outcome.</div>
+        <div class="stat-grid stat-grid-wide">
+          <div class="stat-tile"><div class="stat-lbl">25th Percentile</div><div class="stat-val" id="st-p25">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">50th Percentile</div><div class="stat-val" id="st-p50">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">75th Percentile</div><div class="stat-val" id="st-p75">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">90th Percentile</div><div class="stat-val" id="st-p90">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">99th Percentile</div><div class="stat-val" id="st-p99">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">Skewness</div><div class="stat-val" id="st-skew">—</div></div>
+          <div class="stat-tile"><div class="stat-lbl">Excess Kurtosis</div><div class="stat-val" id="st-kurt">—</div></div>
+        </div>
+        <div class="mc-note" id="st-diag">Run the simulation to populate the solver diagnostics.</div>
+      </div>
+
+      <div class="mc-export">
+        <label class="mc-toggle" for="mc-thrust-toggle">
+          <input type="checkbox" id="mc-thrust-toggle" onchange="toggleThrustCurve(this.checked)">
+          Show thrust curve
+        </label>
+        <button class="btn btn-ghost" id="mc-export-csv" onclick="exportMonteCarloCSV()">Export Every Trial (CSV)</button>
+        <button class="btn btn-ghost" id="mc-export-summary" onclick="exportMonteCarloSummaryCSV()">Export Statistics (CSV)</button>
+        <button class="btn btn-ghost" id="mc-export-png" onclick="exportMonteCarloPNG()">Export All Charts (PNG)</button>
+      </div>
+
+      <!-- F1-STYLE REACTION TEST. Sits at the end of the Monte Carlo tool
+           because reaction time is one of its sampled inputs. Uses the existing
+           .glass card, .eng-h4/.eng-sub headings and .btn button classes; it
+           introduces no new colours, sizes or spacing conventions. -->
+      <div class="glass reaction-card" id="reaction-test" style="margin-top:22px">
+        <div class="eng-h4">Reaction Test</div>
+        <div class="eng-sub">The simulator samples a reaction time for every trial. This measures yours: wait for all five lights, then react the instant they go out. Click the panel, press Space, or tap.</div>
+        <div class="rt-lights" id="rt-lights" aria-hidden="true"></div>
+        <div class="rt-pad" id="rt-pad" tabindex="0" role="button"
+             aria-label="Reaction test input — activate the moment the lights go out">
+          <div class="rt-result" id="rt-result" role="status" aria-live="assertive"></div>
+          <div class="rt-status" id="rt-status"></div>
+        </div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn btn-primary" type="button" id="rt-start">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENGINEERING DECISION LINEAGE -->
+    <div class="eng-tool" id="tool-lineage">
+      <div class="glass lineage-form">
+        <div class="eng-h4">Log a New Design Iteration</div>
+        <div class="eng-sub">Every iteration is unlimited and versioned against a parent design, so the tool can explain why it evolved.</div>
+        <div class="field-grid" style="grid-template-columns:repeat(4,1fr)" id="lineage-field-grid">
+          <div class="field"><label>Design Name</label><input type="text" id="ln-name" placeholder="e.g. Aero Rev C"></div>
+          <div class="field"><label>Parent Design</label><select id="ln-parent"></select></div>
+          <div class="field"><label>Mass (g)</label><input type="number" id="ln-mass" step="0.1" value="58"></div>
+          <div class="field"><label>Aerodynamic Drag (Cd)</label><input type="number" id="ln-drag" step="0.001" value="0.24"></div>
+          <div class="field"><label>Recorded Nose Deflection (mm)</label><input type="number" id="ln-deflect" step="0.01" value="1.5" title="Operator-recorded observation, not a calculated structural result."></div>
+          <div class="field"><label>Manufacturing Complexity (1–10)</label><input type="number" id="ln-complex" step="1" min="1" max="10" value="6"></div>
+          <div class="field"><label>Manufacturing Time (hrs)</label><input type="number" id="ln-mfgtime" step="0.1" value="5"></div>
+          <div class="field" style="grid-column:span 2"><label>Engineering Notes</label><input type="text" id="ln-notes" placeholder="Why did this iteration happen?"></div>
+        </div>
+        <div class="ln-error" id="ln-error" style="display:none"></div>
+        <!-- Inline consent/confirmation panel. Reuses the existing field and
+             button styling; deliberately not window.confirm(), which would be a
+             browser modal outside the site's own UI. -->
+        <div class="ln-prompt" id="ln-prompt" style="display:none" role="alertdialog" aria-live="assertive">
+          <div id="ln-prompt-msg"></div>
+          <div class="btn-row" id="ln-prompt-actions" style="margin-top:12px"></div>
+        </div>
+        <div class="btn-row" style="margin-top:18px">
+          <button class="btn btn-primary" onclick="addDesignIteration()">Add Iteration</button>
+          <button class="btn btn-ghost" onclick="importMonteCarloToLineage()">Import Monte Carlo Result</button>
+          <button class="btn btn-ghost" onclick="resetLineageDemo()">Reset to Demo Data</button>
+          <button class="btn btn-ghost" id="ln-wipe" onclick="wipeLineageData()">Wipe All Data</button>
+        </div>
+      </div>
+
+      <div class="lineage-top">
+        <div class="glass lineage-tree">
+          <div class="lineage-tree-head">
+            <div>
+              <div class="eng-h4">Interactive Genealogy Tree</div>
+              <div class="eng-sub">Click any design to see why it evolved and why it was selected.</div>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn-mini" onclick="exportDesignReport()">Report</button>
+              <button type="button" class="btn-mini" onclick="exportTreeSVG()">SVG</button>
+              <button type="button" class="btn-mini" onclick="exportTreePNG()">PNG</button>
+              <button type="button" class="btn-mini" onclick="exportLineageCSV()">CSV</button>
+            </div>
+          </div>
+          <div class="tree-wrap" id="tree-wrap"></div>
+        </div>
+        <div class="glass lineage-detail" id="lineage-detail"></div>
+      </div>
+
+      <div class="lineage-charts">
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Pareto Frontier — Mass vs. Aerodynamic Drag</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-pareto','pareto-frontier')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-pareto"></canvas></div>
+        </div>
+        <div class="glass chart-card">
+          <div class="chart-card-head">
+            <h4>Radar Comparison — Selected vs. Fleet Average</h4>
+            <button type="button" class="btn-mini" onclick="exportChartPNG('chart-radar','radar-comparison')">PNG</button>
+          </div>
+          <div class="chart-box"><canvas id="chart-radar"></canvas></div>
+        </div>
+      </div>
+
+      <div class="glass lineage-summary">
+        <div class="eng-h4">Trade-Off Summary</div>
+        <div class="eng-sub">Lower is better on every column. Rows on the Pareto frontier trade mass for drag (or vice-versa) with no design beating them on both.</div>
+        <div style="overflow-x:auto;margin-top:14px">
+          <table class="trade-table" id="trade-table">
+            <thead><tr><th>Design</th><th>Parent</th><th>Mass (g)</th><th>Drag (Cd)</th><th>Rec. Deflection (mm)</th><th>Complexity</th><th>Mfg Time (hrs)</th><th>Pareto Front</th></tr></thead>
+            <tbody id="trade-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PART PANELS -->
+<section id="parts">
+  <div class="wrap">
+    <div class="eyebrow fade">Anatomy of a STEM Racing Car</div>
+    <h2 class="section-title fade">Part <span>panels</span></h2>
+    <p class="lead fade">A STEM racing car is a small CO₂-powered model engineered to thousandths of a second. Here's what makes it fast — and what makes it matter.</p>
+    <div class="panel-grid" id="panel-grid"></div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="wrap">
+    <div class="eyebrow fade">The People Behind Silver Mach</div>
+    <h2 class="section-title fade">Meet the <span>team</span></h2>
+    <div class="team-grid" id="team-grid"></div>
+  </div>
+</section>
+
+<!-- REFLECTION -->
+<section id="reflection">
+  <div class="wrap">
+    <div class="eyebrow fade">Looking Back</div>
+    <h2 class="section-title fade">Reflection: <span>engineering under pressure.</span></h2>
+    <p class="lead fade">Running a STEM Racing campaign alongside the IB Diploma meant every engineering
+      decision was also a scheduling decision. This section records how the team managed that, what the
+      time constraint forced us to change, and what we would do differently.</p>
+
+    <div class="eng-alert warn fade" style="margin-top:30px">
+      <b>Awaiting the team's own words.</b> The headings below are the structure only. The reflection
+      itself must be written by the team — inventing plausible-sounding experiences, quotes or
+      individual contributions would misrepresent what actually happened and would be exactly the kind
+      of unevidenced claim this site has been audited to remove. Replace each italic prompt with the
+      real account.
+    </div>
+
+    <div class="reflect-grid">
+      <div class="reflect-card fade">
+        <h3>Balancing the IBDP with STEM Racing</h3>
+        <p>How the team scheduled build, testing and enterprise work around IB internal assessments,
+          coursework deadlines and exam preparation.</p>
+        <div class="reflect-placeholder"><i>To be supplied: which IB deadlines collided with which
+          project milestones, and how the team actually resolved the clash.</i></div>
+      </div>
+
+      <div class="reflect-card fade">
+        <h3>Working to a Tight Constraint</h3>
+        <p>The competition timeline was fixed and immovable, so scope had to flex instead.</p>
+        <div class="reflect-placeholder"><i>To be supplied: what was cut, deferred or simplified to
+          protect the race date, and who made those calls.</i></div>
+      </div>
+
+      <div class="reflect-card fade">
+        <h3>Adapting Decisions Under Pressure</h3>
+        <p>Where limited time changed an engineering choice — accepting a good-enough design instead of
+          continuing to iterate.</p>
+        <div class="reflect-placeholder"><i>To be supplied: a specific decision the team would have
+          taken differently with more time. The Decision Lineage tool above records the iterations, so
+          this can be written directly against that evidence.</i></div>
+      </div>
+
+      <div class="reflect-card fade">
+        <h3>Planning</h3>
+        <p>What the team planned in advance, and where the plan met reality.</p>
+        <div class="reflect-placeholder"><i>To be supplied: how work was planned and tracked, and which
+          part of the plan proved least accurate.</i></div>
+      </div>
+
+      <div class="reflect-card fade">
+        <h3>Teamwork</h3>
+        <p>How five people split engineering, manufacturing, enterprise and documentation without
+          duplicating effort or dropping a workstream.</p>
+        <div class="reflect-placeholder"><i>To be supplied: how responsibilities were divided and how
+          the team covered for each other during peak academic load.</i></div>
+      </div>
+
+      <div class="reflect-card fade">
+        <h3>Iteration &amp; Lessons Learned</h3>
+        <p>What the iteration record actually taught the team about its own process.</p>
+        <div class="reflect-placeholder"><i>To be supplied: the single most useful lesson, and the one
+          process change the team would make for a future campaign.</i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGACY -->
+<section id="legacy" class="legacy">
+  <div class="wrap">
+    <span class="quote-mark fade">&ldquo;</span>
+    <blockquote class="fade">We don't just want to win races. We want to leave behind a team, a workshop, and a spark that the <span>next generation of engineers</span> can carry forward — just like we did.</blockquote>
+  </div>
+</section>
+
+<!-- SPONSORSHIP -->
+<section id="sponsors">
+  <div class="wrap">
+    <div class="eyebrow fade">SilverMach's Vision With You</div>
+    <h2 class="section-title fade">Partner tiers <span>&amp; benefits</span></h2>
+    <p class="lead fade">SilverMach seeks partners who want real visibility where it actually matters: among a highly engaged student audience driving ideas, events, and digital reach. Your support directly powers a platform built for impact, creativity, and consistent exposure across school and online channels. In return, we offer structured sponsorship tiers designed to match your level of involvement with clear, measurable benefits.</p>
+
+    <div class="sponsor-table-wrap fade">
+      <table class="sponsor-table">
+        <thead>
+          <tr>
+            <th>Benefit</th>
+            <th class="tier-title">Title Sponsor</th>
+            <th class="tier-platinum">Platinum</th>
+            <th class="tier-gold">Gold</th>
+            <th class="tier-silver">Silver</th>
+            <th class="tier-bronze">Bronze</th>
+          </tr>
+        </thead>
+        <tbody id="sponsor-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="tier-list fade" id="tier-list"></div>
+
+    <div class="partners-heading fade">Our Sponsors &amp; In-Kind Partners</div>
+    <div class="partners-grid fade" id="partners-grid"></div>
+
+    <div class="sponsor-cta fade">
+      <a class="btn btn-primary" href="mailto:silvermach7@gmail.com">Become a Sponsor</a>
+      <a class="btn btn-ghost" href="mailto:silvermach7@gmail.com">Request the Sponsorship Deck</a>
+    </div>
+  </div>
+</section>
+
+<!-- COUNTDOWN -->
+<section id="countdown" class="countdown-section">
+  <div class="wrap countdown-wrap">
+    <div class="countdown-eyebrow">T-Minus to Race Day</div>
+    <h2 class="countdown-title">OPEN NATIONALS <span>2026</span></h2>
+    <p class="countdown-sub">Every second brings SilverMach closer to the grid. Countdown to 9 August 2026.</p>
+    <div class="doomsday" id="doomsday">
+      <div class="dd-unit"><div class="num" id="dd-days">00</div><div class="lbl">Days</div></div>
+      <div class="dd-unit"><div class="num" id="dd-hours">00</div><div class="lbl">Hours</div></div>
+      <div class="dd-unit"><div class="num" id="dd-mins">00</div><div class="lbl">Minutes</div></div>
+      <div class="dd-unit"><div class="num" id="dd-secs">00</div><div class="lbl">Seconds</div></div>
+    </div>
+    <div class="countdown-foot" id="countdown-foot">Clock is <b>live</b> — build, breathe, and bleed speed.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">
+      <img class="logo" id="footer-logo" src="./assets/logo-silvermach.png" alt="SilverMach logo" style="width:30px;height:30px" />
+      SILVER MACH
+    </div>
+    <div>STEM Racing Open Nationals 2026 • Build, Breath and Bleed Speed.</div>
+    <div class="footer-contact">
+      <a href="mailto:silvermach7@gmail.com"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="M3 6l9 7 9-7"/></svg>silvermach7@gmail.com</a>
+      <a href="https://www.instagram.com/teamsilvermach/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>@teamsilvermach</a>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ==========================================================================
+     Scripts. Classic deferred <script> tags, loaded in dependency order.
+
+     Why not native ES modules: `import` is blocked by CORS on the file://
+     scheme, which would break opening index.html by double-clicking it. Classic
+     deferred scripts execute in document order, after parsing, on BOTH file://
+     and https://, need no bundler or build step, and satisfy the same
+     zero-tooling requirement. Every path is relative so the site works from a
+     GitHub Pages project subpath (user.github.io/repo-name/).
+
+     Chart.js and three.js are NOT hardcoded <script src> tags any more: they are
+     fetched by js/engine/libLoader.js, which tries jsDelivr, unpkg and cdnjs in
+     turn before falling back to the copies in ./vendor/.
+     ========================================================================== -->
+<script src="./js/engine/utils.js" defer></script>
+<script src="./js/engine/statistics.js" defer></script>
+<script src="./js/engine/thrust.js" defer></script>
+<script src="./js/engine/monteCarlo.js" defer></script>
+<script src="./js/engine/pareto.js" defer></script>
+<script src="./js/engine/genealogy.js" defer></script>
+<script src="./js/engine/charts.js" defer></script>
+<script src="./js/engine/treeRenderer.js" defer></script>
+<script src="./js/engine/export.js" defer></script>
+<script src="./js/engine/libLoader.js" defer></script>
+<script src="./js/data/parts.js" defer></script>
+<script src="./js/data/team.js" defer></script>
+<script src="./js/data/carModel.js" defer></script>
+<script src="./js/site.js" defer></script>
+<script src="./js/car3d.js" defer></script>
+<script src="./js/app.js" defer></script>
+<script src="./js/reaction.js" defer></script>
+</body>
+</html>
