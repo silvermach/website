@@ -22,12 +22,22 @@
   'use strict';
 
   var doc = root.document;
-  var canvas = doc.getElementById('car-canvas');
-  if (!canvas) return;   // page has no 3D viewer (e.g. greenmach.html)
+  // The viewer now serves two canvases: #car-canvas on index.html and
+  // #gmcar-canvas on greenmach.html. Same file, same geometry, same renderer —
+  // greenmach.html is NOT given a second car implementation. Only the accent
+  // colour, the fallback element and the part-selection callback differ, and
+  // each is read from a data attribute whose default reproduces index.html's
+  // existing behaviour exactly, so the Car & Insights viewer is unchanged.
+  var canvas = doc.getElementById('car-canvas') || doc.getElementById('gmcar-canvas');
+  if (!canvas) return;   // page has no 3D viewer
+
+  var FALLBACK_ID = canvas.dataset.fallback || 'car-fallback';
+  var ACCENT = parseInt(canvas.dataset.accent || '2ad6ee', 16);
+  var SELECT_VIA = canvas.dataset.selectVia || 'Site';
 
   function showFallback(reason) {
     canvas.style.display = 'none';
-    var fb = doc.getElementById('car-fallback');
+    var fb = doc.getElementById(FALLBACK_ID);
     if (fb) fb.style.display = 'flex';
     if (reason && root.console && root.console.warn) {
       root.console.warn('[SilverMach] 3D car viewer unavailable: ' + reason);
@@ -52,7 +62,7 @@
     scene.add(new THREE.HemisphereLight(0xdfe8ee,0x0a0c10,0.75));
     const key=new THREE.DirectionalLight(0xffffff,1.05);key.position.set(6,10,5);scene.add(key);
     const fill=new THREE.DirectionalLight(0xbfd4de,0.4);fill.position.set(-4,6,8);scene.add(fill);
-    const cyanLight=new THREE.PointLight(0x2ad6ee,1.2,44);cyanLight.position.set(-7,3,-4);scene.add(cyanLight);
+    const cyanLight=new THREE.PointLight(ACCENT,1.2,44);cyanLight.position.set(-7,3,-4);scene.add(cyanLight);
     const rim=new THREE.DirectionalLight(0x9fdfff,0.55);rim.position.set(-6,2,-7);scene.add(rim);
 
     const silverMat=new THREE.MeshStandardMaterial({color:0xccd0d6,metalness:.5,roughness:.35});
@@ -152,14 +162,14 @@
     })();
 
     /* ---- ENVIRONMENT ---- */
-    const grid=new THREE.GridHelper(44,44,0x2ad6ee,0x161a1f);grid.position.y=0;grid.material.opacity=0.16;grid.material.transparent=true;scene.add(grid);
-    const ring=new THREE.Mesh(new THREE.RingGeometry(3.6,5.8,48),new THREE.MeshBasicMaterial({color:0x2ad6ee,transparent:true,opacity:0.07,side:THREE.DoubleSide}));
+    const grid=new THREE.GridHelper(44,44,ACCENT,0x161a1f);grid.position.y=0;grid.material.opacity=0.16;grid.material.transparent=true;scene.add(grid);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(3.6,5.8,48),new THREE.MeshBasicMaterial({color:ACCENT,transparent:true,opacity:0.07,side:THREE.DoubleSide}));
     ring.rotation.x=-Math.PI/2;ring.position.y=0.005;scene.add(ring);
 
     const sparkN=70,sp=new Float32Array(sparkN*3);
     for(let i=0;i<sparkN;i++){sp[i*3]=(Math.random()-.5)*16;sp[i*3+1]=Math.random()*5;sp[i*3+2]=(Math.random()-.5)*16;}
     const sparkGeo=new THREE.BufferGeometry();sparkGeo.setAttribute('position',new THREE.BufferAttribute(sp,3));
-    const sparks=new THREE.Points(sparkGeo,new THREE.PointsMaterial({color:0x2ad6ee,size:0.06,transparent:true,opacity:.7}));
+    const sparks=new THREE.Points(sparkGeo,new THREE.PointsMaterial({color:ACCENT,size:0.06,transparent:true,opacity:.7}));
     scene.add(sparks);
 
     /* ---- (highlight-on-tap glow removed) ---- */
@@ -175,8 +185,9 @@
       const hit=hits.find(h=>h.object.userData.partKey);
       if(hit){const k=hit.object.userData.partKey;
         // site.js owns part selection; guard in case it has not booted yet.
-        if(root.SM.Site&&typeof root.SM.Site.selectPart==='function'){
-          root.SM.Site.selectPart(k==='rearwing'?'frontwing':k);
+        var owner=root.SM[SELECT_VIA];
+        if(owner&&typeof owner.selectPart==='function'){
+          owner.selectPart(k==='rearwing'?'frontwing':k);
         }}});
     canvas.addEventListener('pointerdown',e=>{dragging=true;dragMoved=false;lastX=e.clientX;lastY=e.clientY;autoRotate=false;});
     root.addEventListener('pointerup',()=>{dragging=false;setTimeout(()=>{if(!dragging)autoRotate=true;},2500);});

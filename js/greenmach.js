@@ -132,6 +132,12 @@
           gmTabs.children[b].dataset.key === key);
       }
     }
+
+    // Mirrors what site.js already does on index.html, so the 3D viewer and the
+    // tab strip stay in step. No-op when the viewer has not booted.
+    if (root.SM && typeof root.SM.highlightCarPart === 'function') {
+      root.SM.highlightCarPart(key);
+    }
   }
 
   function buildCarTabs() {

@@ -22,16 +22,25 @@
   var doc = root.document;
   var PARTS = (root.SM && root.SM.Data && root.SM.Data.PARTS) || [];
   var Data = (root.SM && root.SM.Data) || {};
-  var LOGO = './assets/logo.png';
+  // Each page declares its own mark via <body data-logo>; SilverMach is the
+  // default so index.html needs no attribute. This must name a SUPPLIED asset:
+  // it previously pointed at a generated SVG mark that has since been deleted,
+  // which would have resolved to a 404 the moment any page shipped a logo slot
+  // without an inline src.
+  var LOGO = (doc.body && doc.body.dataset.logo) || './assets/logo-silvermach.png';
 
   function el(id) { return doc.getElementById(id); }
 
   /* --------------------------------------------------------------- logos */
 
   function applyLogos() {
+    // Only fill in a mark that the markup did not already specify. The hero
+    // carries the full lockup (emblem + wordmark) while nav and footer use the
+    // emblem-only mark, so blindly overwriting all three would shrink the
+    // lockup into a 38px box.
     ['nav-logo', 'hero-logo', 'footer-logo'].forEach(function (id) {
       var node = el(id);
-      if (node) node.src = LOGO;
+      if (node && !node.getAttribute('src')) node.src = LOGO;
     });
   }
 

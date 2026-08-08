@@ -27,15 +27,23 @@
   }
 
   var TRIAL_COLUMNS = [
-    { key: 'simulationNumber', header: 'simulation',          decimals: 0 },
-    { key: 'mass',             header: 'mass_g',              decimals: 4 },
-    { key: 'drag',             header: 'drag_coefficient',    decimals: 6 },
-    { key: 'launchForce',      header: 'launch_force_n',      decimals: 5 },
-    { key: 'reactionTime',     header: 'reaction_time_s',     decimals: 6 },
+    { key: 'simulationNumber', header: 'simulation',            decimals: 0 },
+    { key: 'mass',             header: 'mass_g',                decimals: 4 },
+    { key: 'drag',             header: 'drag_coefficient',      decimals: 6 },
+    { key: 'launchForce',      header: 'peak_thrust_n',         decimals: 5 },
+    { key: 'reactionTime',     header: 'reaction_time_s',       decimals: 6 },
+    /* Four independent wheel toe angles: + = toe-out, - = toe-in, degrees,
+       measured from the car's longitudinal axis. */
+    { key: 'wheelFL',          header: 'toe_front_left_deg',    decimals: 5 },
+    { key: 'wheelFR',          header: 'toe_front_right_deg',   decimals: 5 },
+    { key: 'wheelRL',          header: 'toe_rear_left_deg',     decimals: 5 },
+    { key: 'wheelRR',          header: 'toe_rear_right_deg',    decimals: 5 },
+    { key: 'friction',         header: 'friction_coefficient',  decimals: 6 },
+    { key: 'scrubForce',       header: 'wheel_scrub_force_n',   decimals: 7 },
     { key: 'acceleration',     header: 'peak_acceleration_ms2', decimals: 5 },
-    { key: 'maxVelocity',      header: 'max_velocity_ms',     decimals: 5 },
-    { key: 'travelTime',       header: 'travel_time_s',       decimals: 6 },
-    { key: 'finishTime',       header: 'finish_time_s',       decimals: 6 }
+    { key: 'maxVelocity',      header: 'max_velocity_ms',       decimals: 5 },
+    { key: 'travelTime',       header: 'travel_time_s',         decimals: 6 },
+    { key: 'finishTime',       header: 'finish_time_s',         decimals: 6 }
   ];
 
   /**
@@ -124,9 +132,14 @@
    * live Pareto verdict for each design.
    */
   function designsToCSV(designs, store, paretoAnalysis) {
+    // race_time_s, friction_mu and the four toe columns are appended AFTER the
+    // existing columns so any consumer reading by index is unaffected. The four
+    // wheel angles stay four columns: no summed total is written anywhere.
     var header = ['id', 'name', 'parent_id', 'parent_name', 'depth', 'mass_g',
                   'drag_cd', 'deflection_mm', 'complexity_10', 'mfg_time_hrs',
-                  'pareto_front', 'pareto_optimal', 'timestamp_iso', 'notes'];
+                  'pareto_front', 'pareto_optimal', 'timestamp_iso', 'notes',
+                  'race_time_s', 'friction_mu', 'toe_front_left_deg',
+                  'toe_front_right_deg', 'toe_rear_left_deg', 'toe_rear_right_deg'];
     var lines = [csvRow(header)];
 
     for (var i = 0; i < designs.length; i++) {
@@ -149,7 +162,15 @@
         front,
         optimal,
         new Date(d.timestamp).toISOString(),
-        d.notes
+        d.notes,
+        // Optional data points: an empty cell means "never recorded", which is
+        // not the same as zero and must not be written as one.
+        U.isFiniteNumber(d.raceTime) ? d.raceTime.toFixed(6) : '',
+        U.isFiniteNumber(d.friction) ? d.friction.toFixed(6) : '',
+        U.isFiniteNumber(d.alignFL) ? d.alignFL.toFixed(5) : '',
+        U.isFiniteNumber(d.alignFR) ? d.alignFR.toFixed(5) : '',
+        U.isFiniteNumber(d.alignRL) ? d.alignRL.toFixed(5) : '',
+        U.isFiniteNumber(d.alignRR) ? d.alignRR.toFixed(5) : ''
       ]));
     }
     return lines.join('\r\n') + '\r\n';

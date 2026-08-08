@@ -1,0 +1,64 @@
+/* ==========================================================================
+ * SilverMach — fonts.css
+ * --------------------------------------------------------------------------
+ * BAUHAUS STD — the two supplied web font files, used directly.
+ *
+ *     assets/fonts/BauhausStd-Medium.woff2   → titles and headings
+ *     assets/fonts/BauhausStd-Light.woff2    → body copy and normal UI text
+ *
+ * Both files were supplied for this project and are loaded as-is. Nothing is
+ * downloaded from a webfont host, no third typeface is referenced, and no
+ * lookalike is substituted anywhere.
+ *
+ * WEIGHTS — only two cuts were supplied (Medium and Light), so each @font-face
+ * below is declared across the full 100–900 range. That is deliberate: the
+ * existing stylesheet already sets font-weight 600/700/800 on various headings,
+ * and those declarations are left exactly as they are. Declaring a single cut
+ * across the whole range means those elements resolve to the supplied Medium
+ * file (with the browser's own synthetic emboldening) instead of falling out of
+ * the family altogether. No font-weight, font-size, letter-spacing or
+ * line-height in the project was changed.
+ *
+ * Paths are relative so they resolve on a GitHub Pages project subpath.
+ * font-display:swap keeps text visible while the files load.
+ * ========================================================================== */
+
+@font-face {
+  font-family: 'BauhausStd Medium';
+  src: url('../assets/fonts/BauhausStd-Medium.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BauhausStd Light';
+  src: url('../assets/fonts/BauhausStd-Light.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --------------------------------------------------------------------------
+ * Project-wide typeface tokens.
+ *
+ * Every font stack in the project resolves through these two variables, so the
+ * typeface is defined in exactly one place. The fallback chain after the
+ * supplied family is unchanged from before, so nothing about the layout moves
+ * if a file ever fails to load.
+ *
+ *   --font-display → BauhausStd Medium  (h1/h2/h3, brand, eyebrows, buttons,
+ *                                        card headings, stat values, chart
+ *                                        card titles — i.e. the existing
+ *                                        heading selectors, untouched)
+ *   --font-body    → BauhausStd Light   (body, paragraphs, labels, inputs,
+ *                                        table text, explanatory text)
+ * ------------------------------------------------------------------------ */
+:root {
+  --font-body: 'BauhausStd Light',
+               -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               Helvetica, Arial, sans-serif;
+  --font-display: 'BauhausStd Medium',
+                  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                  Helvetica, Arial, sans-serif;
+}

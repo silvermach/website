@@ -453,11 +453,36 @@
     var thresholds = opts.thresholds || [1.00, 0.95, 0.90];
     var pPoints = opts.percentilePoints || [25, 50, 75, 90, 99];
 
-    var n = values.length;
-    if (n === 0) {
+    if (values.length === 0) {
       throw new RangeError('Cannot summarise an empty sample.');
     }
 
+    // NON-FINITE GUARD. A trial that never reaches the line returns Infinity
+    // and a trial the integrator could not resolve returns NaN. Either one
+    // silently turns the mean, standard deviation and every percentile into
+    // NaN, which would then be printed on screen as though it were a result.
+    // Such trials are removed from the statistics and counted instead, so the
+    // numbers describe the races that actually resolved and the exclusion is
+    // stated rather than hidden. When every value is finite — the normal case —
+    // nothing is copied or filtered and the result is bit-for-bit unchanged.
+    var excludedCount = 0;
+    for (var g = 0; g < values.length; g++) {
+      if (!isFinite(values[g])) excludedCount++;
+    }
+    if (excludedCount > 0) {
+      var kept = [];
+      for (var h = 0; h < values.length; h++) {
+        if (isFinite(values[h])) kept.push(values[h]);
+      }
+      if (kept.length === 0) {
+        throw new RangeError(
+          'Every trial produced a non-finite result (' + excludedCount +
+          ' of ' + values.length + '). There is nothing to summarise.');
+      }
+      values = kept;
+    }
+
+    var n = values.length;
     var sorted = U.sortedCopy(values);
     var m = mean(sorted);
     var sd = stdDev(sorted, true);
@@ -470,6 +495,7 @@
 
     return {
       count: n,
+      excludedCount: excludedCount,
       mean: m,
       median: medianSorted(sorted),
       mode: modeInfo.value,

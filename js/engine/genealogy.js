@@ -23,12 +23,105 @@
    * which is what makes the radar normalisation and trade-off language valid.
    */
   var METRICS = [
-    { key: 'mass',       label: 'Mass',                     unit: 'g',   direction: 'min', decimals: 2 },
-    { key: 'drag',       label: 'Aerodynamic Drag',         unit: 'Cd',  direction: 'min', decimals: 3 },
-    { key: 'deflection', label: 'Structural Deflection',    unit: 'mm',  direction: 'min', decimals: 2 },
-    { key: 'complexity', label: 'Manufacturing Complexity', unit: '/10', direction: 'min', decimals: 1 },
-    { key: 'mfgTime',    label: 'Manufacturing Time',       unit: 'hrs', direction: 'min', decimals: 2 }
+    { key: 'mass', label: 'Mass', unit: 'g', direction: 'min', decimals: 2,
+      provenance: 'measured',
+      definition: 'Mass of the assembled car, weighed on a balance.' },
+    { key: 'drag', label: 'Aerodynamic Drag', unit: 'Cd', direction: 'min', decimals: 3,
+      provenance: 'simulated',
+      definition: 'Drag coefficient from Fusion 360 CFD on the body geometry.' },
+    /* ------------------------------------------------------------------ *
+     * DEFLECTION — deliberately NOT called "structural deflection".
+     *
+     * This tool performs no structural analysis whatsoever: there is no FEA,
+     * no beam model, no stiffness matrix, no load case. Calling the field
+     * "Structural Deflection" implied a computed structural result that does
+     * not exist anywhere in this codebase, so the label has been corrected.
+     *
+     * What the number actually is: a value the team TYPES IN — the tip
+     * deflection of the nose observed when a known hand load is applied to the
+     * assembled car during the build check. It is an operator-recorded
+     * observation, not a simulation output. See METRIC_NOTES below for the
+     * text shown to the user.
+     * ------------------------------------------------------------------ */
+    { key: 'deflection', label: 'Recorded Nose Deflection', unit: 'mm',
+      direction: 'min', decimals: 2,
+      provenance: 'recorded',
+      definition: 'Operator-recorded value. NOT calculated by this tool.' },
+    { key: 'complexity', label: 'Manufacturing Complexity', unit: '/10',
+      direction: 'min', decimals: 1,
+      provenance: 'judgement',
+      definition: 'Team-assigned 1-10 build-difficulty score.' },
+    { key: 'mfgTime', label: 'Manufacturing Time', unit: 'hrs',
+      direction: 'min', decimals: 2,
+      provenance: 'measured',
+      definition: 'Wall-clock hours to produce the design.' }
   ];
+
+  /**
+   * ADDITIONAL LINEAGE DATA POINTS.
+   *
+   * These are recorded per design exactly like the metrics above — same node,
+   * same store, same persistence, same display conventions — but they are held
+   * in a SEPARATE list on purpose. METRICS drives the radar normalisation, the
+   * Pareto comparison and the advantage/disadvantage text; appending to it
+   * would silently add axes to the existing radar chart and change an existing
+   * visualisation. These are therefore recorded and displayed without touching
+   * any chart.
+   *
+   * Every one is OPTIONAL. A design that has never had a race time attached
+   * stores null, so the five seed designs and all existing behaviour are
+   * unchanged.
+   *
+   * The four wheel angles are four separate data points, never a sum. A single
+   * combined figure would destroy exactly the information the four-wheel model
+   * exists to preserve: +1/-1/+1/-1 and 0/0/0/0 sum identically but are
+   * completely different builds.
+   */
+  var EXTRA_METRICS = [
+    { key: 'raceTime', label: 'Race Time', unit: 's', decimals: 4,
+      provenance: 'simulated',
+      definition: 'Predicted finish time. Populated from a Monte Carlo run, or typed in.' },
+    { key: 'friction', label: 'Coefficient of Friction', unit: 'mu', decimals: 4,
+      provenance: 'assumption',
+      definition: 'Wheel scrub friction coefficient used for this design. Assumed, not measured.' },
+    { key: 'alignFL', label: 'Toe — Front Left', unit: 'deg', decimals: 4,
+      provenance: 'recorded',
+      definition: 'Front-left toe angle for this design. Held independently of the other three.' },
+    { key: 'alignFR', label: 'Toe — Front Right', unit: 'deg', decimals: 4,
+      provenance: 'recorded',
+      definition: 'Front-right toe angle for this design. Held independently of the other three.' },
+    { key: 'alignRL', label: 'Toe — Rear Left', unit: 'deg', decimals: 4,
+      provenance: 'recorded',
+      definition: 'Rear-left toe angle for this design. Held independently of the other three.' },
+    { key: 'alignRR', label: 'Toe — Rear Right', unit: 'deg', decimals: 4,
+      provenance: 'recorded',
+      definition: 'Rear-right toe angle for this design. Held independently of the other three.' }
+  ];
+
+  /**
+   * Long-form explanations surfaced in the UI so a reader understands each
+   * number without opening the source. Written for a judge, not a developer.
+   */
+  var METRIC_NOTES = {
+    deflection: {
+      title: 'Recorded Nose Deflection',
+      what: 'How far the nose of the assembled car moves when a known hand ' +
+            'load is applied at the tip during the build check.',
+      unit: 'millimetres (mm)',
+      cause: 'Bending of the low-density polyurethane foam body and flexing ' +
+             'of the bonded PETG components under load.',
+      source: 'RECORDED BY THE TEAM AND TYPED IN. This tool performs no ' +
+              'structural analysis: there is no FEA, no beam model and no ' +
+              'stiffness calculation anywhere in the codebase. The number is ' +
+              'an observation, not a computed result.',
+      decision: 'Used as a stiffness proxy in the trade-off. A design that ' +
+                'saves mass by removing material usually deflects more, so ' +
+                'this column is what stops the lineage chasing mass alone.',
+      caution: 'Because it is hand-applied rather than instrumented, treat it ' +
+               'as a comparative indicator between iterations, not an ' +
+               'absolute engineering value.'
+    }
+  };
 
   function metricByKey(key) {
     for (var i = 0; i < METRICS.length; i++) if (METRICS[i].key === key) return METRICS[i];
@@ -107,12 +200,21 @@
     var out = { name: name };
     out.mass = U.requireNumber(input.mass, 'Mass (g)', { min: 0, exclusiveMin: true });
     out.drag = U.requireNumber(input.drag, 'Aerodynamic drag (Cd)', { min: 0 });
-    out.deflection = U.requireNumber(input.deflection, 'Structural deflection (mm)', { min: 0 });
+    out.deflection = U.requireNumber(input.deflection, 'Recorded nose deflection (mm)', { min: 0 });
     out.complexity = U.requireNumber(input.complexity, 'Manufacturing complexity', { min: 1, max: 10 });
     out.mfgTime = U.requireNumber(input.mfgTime, 'Manufacturing time (hrs)', { min: 0 });
     out.notes = typeof input.notes === 'string' && input.notes.trim() !== ''
       ? input.notes.trim()
       : 'No engineering notes recorded for this iteration.';
+
+    // Optional extras. Absent, empty or null stays null rather than becoming 0:
+    // a design with no recorded race time must not read as a 0.0000 s car.
+    for (var e = 0; e < EXTRA_METRICS.length; e++) {
+      var ek = EXTRA_METRICS[e].key;
+      var raw = input[ek];
+      if (raw === undefined || raw === null || raw === '') { out[ek] = null; continue; }
+      out[ek] = U.requireNumber(raw, EXTRA_METRICS[e].label);
+    }
     return out;
   };
 
@@ -140,6 +242,9 @@
       notes: fields.notes,
       timestamp: Date.now()
     };
+    for (var e = 0; e < EXTRA_METRICS.length; e++) {
+      design[EXTRA_METRICS[e].key] = fields[EXTRA_METRICS[e].key];
+    }
 
     this.designs.push(design);
     this._byId.set(design.id, design);
@@ -166,6 +271,10 @@
       mfgTime: patch.mfgTime !== undefined ? patch.mfgTime : design.mfgTime,
       notes: patch.notes !== undefined ? patch.notes : design.notes
     };
+    for (var e = 0; e < EXTRA_METRICS.length; e++) {
+      var ek = EXTRA_METRICS[e].key;
+      merged[ek] = patch[ek] !== undefined ? patch[ek] : design[ek];
+    }
     var fields = this.normalizeInput(merged);
     this._assertUniqueName(fields.name, id);
 
@@ -176,6 +285,9 @@
       design.parent = newParent;
     }
 
+    for (var e2 = 0; e2 < EXTRA_METRICS.length; e2++) {
+      design[EXTRA_METRICS[e2].key] = fields[EXTRA_METRICS[e2].key];
+    }
     design.name = fields.name;
     design.mass = fields.mass;
     design.drag = fields.drag;
@@ -679,7 +791,7 @@
     { name: 'Aero Rev B', parentName: 'Aero Rev A', mass: 60, drag: 0.24, deflection: 1.5, complexity: 7, mfgTime: 5.5,
       notes: 'Added a twin-element rear wing. Drag fell further but manufacturing complexity crept up — kept because the drag win outweighed the extra CNC time.' },
     { name: 'Lightweight Rev A', parentName: 'Concept V1', mass: 54, drag: 0.31, deflection: 2.4, complexity: 5, mfgTime: 4,
-      notes: 'Hollowed the chassis and switched to a balsa core to chase mass reduction; deflection rose too far so this branch was parked pending a rib redesign.' },
+      notes: 'Hollowed the foam body to chase mass reduction; recorded nose deflection rose too far, so this branch was parked pending a stiffer internal section.' },
     { name: 'Final Assembly', parentName: 'Aero Rev B', mass: 58, drag: 0.235, deflection: 1.55, complexity: 7, mfgTime: 6,
       notes: 'Merged the Aero Rev B shell with a lightened internal rib pattern borrowed from the Lightweight branch — this is the design that raced at Open Nationals.' }
   ];
@@ -713,9 +825,19 @@
   }
 
   root.SM = root.SM || {};
+  function extraMetricByKey(key) {
+    for (var i = 0; i < EXTRA_METRICS.length; i++) {
+      if (EXTRA_METRICS[i].key === key) return EXTRA_METRICS[i];
+    }
+    return null;
+  }
+
   root.SM.Genealogy = {
     METRICS: METRICS,
+    EXTRA_METRICS: EXTRA_METRICS,
+    METRIC_NOTES: METRIC_NOTES,
     metricByKey: metricByKey,
+    extraMetricByKey: extraMetricByKey,
     DesignStore: DesignStore,
     SEED_DESIGNS: SEED_DESIGNS,
     createSeededStore: createSeededStore

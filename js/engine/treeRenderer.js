@@ -62,7 +62,12 @@
     tipFill: '#e8b64c'
   };
 
-  var FONT_STACK = "'Saira','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+  /* SVG text needs an explicit font-family: it does not inherit the page's.
+     Kept identical to the CSS/Chart.js stack so exported .svg and .png files
+     carry the same typeface as the site. */
+  var FONT_STACK = "'BauhausStd Light'," +
+                   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto," +
+                   "Helvetica,Arial,sans-serif";
 
   /* ------------------------------------------------------------- layout */
 

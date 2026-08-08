@@ -19,6 +19,16 @@
   var S = root.SM.Statistics;
 
   /* Brand palette — mirrors the site's CSS custom properties exactly. */
+  /**
+   * Typeface used by every chart label, tooltip and axis title.
+   * Byte-identical to the --font-body chain in css/fonts.css, so canvas text
+   * falls back exactly as the DOM text does and no substitute family is
+   * introduced here. See css/fonts.css for the @font-face block.
+   */
+  var FONT_STACK = "'BauhausStd Light'," +
+                   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto," +
+                   "Helvetica,Arial,sans-serif";
+
   var THEME = {
     cyan: '#2ad6ee',
     cyanSoft: '#7eebfa',
@@ -210,13 +220,15 @@
     return {
       x: {
         type: 'linear',
-        title: { display: !!xTitle, text: xTitle || '', color: THEME.silverDim },
-        ticks: { color: THEME.silverDim, maxTicksLimit: 7 },
+        title: { display: !!xTitle, text: xTitle || '', color: THEME.silverDim,
+                 font: { family: FONT_STACK } },
+        ticks: { color: THEME.silverDim, maxTicksLimit: 7, font: { family: FONT_STACK } },
         grid: { color: THEME.grid }
       },
       y: {
-        title: { display: !!yTitle, text: yTitle || '', color: THEME.silverDim },
-        ticks: { color: THEME.silverDim },
+        title: { display: !!yTitle, text: yTitle || '', color: THEME.silverDim,
+                 font: { family: FONT_STACK } },
+        ticks: { color: THEME.silverDim, font: { family: FONT_STACK } },
         grid: { color: THEME.grid }
       }
     };
@@ -556,9 +568,91 @@
     };
   }
 
+  /**
+   * Thrust-decay curve.
+   *
+   * SINGLE SOURCE OF TRUTH: the points come from SM.Thrust.thrustSeries(),
+   * which is the same F_thrust(t) the Monte Carlo solver integrates. There is
+   * no second copy of the equation here, so the plotted curve cannot disagree
+   * with the simulated physics. Change τ or the peak thrust and both move
+   * together, because both read the same parameters.
+   *
+   * X axis: Time (s).   Y axis: Thrust (N).
+   *
+   * @param {{peakN:number, tau:number, thrustAngle:number}} params
+   */
+  function thrustCurveConfig(params) {
+    var Thrust = root.SM.Thrust;
+    var series = Thrust.thrustSeries({
+      peakN: params.peakN,
+      tau: params.tau,
+      thrustAngle: params.thrustAngle || 0,
+      points: 180
+    });
+
+    var datasets = [{
+      label: 'Thrust F(t)',
+      data: series.points,
+      borderColor: THEME.cyan,
+      backgroundColor: THEME.cyanWash,
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.25,
+      fill: true,
+      order: 1
+    }];
+
+    // Only draw the forward component separately when it actually differs,
+    // i.e. when the user has dialled in a non-zero misalignment.
+    if (Math.abs(params.thrustAngle || 0) > 1e-9) {
+      datasets.push({
+        label: 'Forward component F(t)·cos θ',
+        data: series.forwardPoints,
+        borderColor: THEME.gold,
+        borderWidth: 2,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        tension: 0.25,
+        fill: false,
+        order: 2
+      });
+    }
+
+    var scales = baseScales('Time (s)', 'Thrust (N)');
+    scales.x.min = 0;
+    scales.x.max = series.tEnd;
+    scales.y.min = 0;
+
+    return {
+      type: 'line',
+      data: { datasets: datasets },
+      options: {
+        animation: ANIM,
+        parsing: false,
+        normalized: true,
+        plugins: {
+          legend: { labels: { color: THEME.silverDim, boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              title: function (items) {
+                return items.length ? 't = ' + U.fmt(items[0].parsed.x, 3) + ' s' : '';
+              },
+              label: function (ctx) {
+                return ctx.dataset.label + ': ' + U.fmt(ctx.parsed.y, 2) + ' N';
+              }
+            }
+          }
+        },
+        scales: scales
+      }
+    };
+  }
+
   root.SM = root.SM || {};
   root.SM.Charts = {
     THEME: THEME,
+    FONT_STACK: FONT_STACK,
+    thrustCurveConfig: thrustCurveConfig,
     histogramSeries: histogramSeries,
     normalOverlaySeries: normalOverlaySeries,
     normalDensitySeries: normalDensitySeries,

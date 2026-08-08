@@ -42,11 +42,16 @@
   var EX = root.SM.Export;
   var TR = root.SM.TreeRenderer;
   var LL = root.SM.LibLoader;
+  var TH = root.SM.Thrust;
+
+  // This build keeps the lineage in memory only; the key exists so the wipe
+  // control also clears a persisted copy if persistence is ever introduced.
+  var LINEAGE_STORAGE_KEY = 'silvermach.lineage';
 
   var TARGET_THRESHOLDS = [1.00, 0.95, 0.90];
   var PERCENTILE_POINTS = [25, 50, 75, 90, 99];
 
-  var SIM_CHART_IDS = ['chart-hist', 'chart-bell', 'chart-cdf', 'chart-qq'];
+  var SIM_CHART_IDS = ['chart-hist', 'chart-bell', 'chart-cdf', 'chart-qq', 'chart-thrust'];
   var LINEAGE_CHART_IDS = ['chart-pareto', 'chart-radar'];
 
   var App = {
@@ -60,7 +65,8 @@
       activeTool: 'monte',
       chartLibReady: false,
       chartLibError: null,
-      treeSvg: null
+      treeSvg: null,
+      thrustVisible: false
     },
     charts: null,
     _listenersBound: false,
@@ -108,11 +114,24 @@
    * TOOL 1 — Monte Carlo Race Outcome Simulator
    * ==================================================================== */
 
+  /**
+   * Peak thrust is NOT a hand-picked number: F₀ = m_CO2·v_e/τ, derived from the
+   * 8 g charge. Computed here so the default field value and the physics agree.
+   */
+  var DEFAULT_PEAK_THRUST = TH.peakThrust(
+    TH.THRUST_DEFAULTS.co2Mass, TH.THRUST_DEFAULTS.exhaustVelocity,
+    TH.THRUST_DEFAULTS.tau);
+
   var MC_DEFAULTS = {
     'mc-mass-mean': 60, 'mc-mass-sigma': 2,
     'mc-drag-mean': 0.28, 'mc-drag-sigma': 0.02,
-    'mc-force-mean': 9, 'mc-force-sigma': 0.5,
+    'mc-force-mean': Number(DEFAULT_PEAK_THRUST.toFixed(2)), 'mc-force-sigma': 1,
     'mc-react-mean': 0.15, 'mc-react-sigma': 0.02,
+    'mc-wheel-sigma-fl': 0.5, 'mc-wheel-sigma-fr': 0.5,
+    'mc-wheel-sigma-rl': 0.5, 'mc-wheel-sigma-rr': 0.5,
+    'mc-friction-mean': MC.PHYSICS.scrubCoefficient, 'mc-friction-sigma': 0,
+    'mc-tau': TH.THRUST_DEFAULTS.tau,
+    'mc-thrust-angle': TH.THRUST_DEFAULTS.thrustAngle,
     'mc-track': 20, 'mc-runs': 10000
   };
 
@@ -126,8 +145,22 @@
       forceStdDev: readInput('mc-force-sigma', 'Launch force σ (N)', { min: 0 }),
       reactionMean: readInput('mc-react-mean', 'Reaction time mean (s)', { min: 0 }),
       reactionStdDev: readInput('mc-react-sigma', 'Reaction time σ (s)', { min: 0 }),
+      wheelAngleStdDevFL: readInput('mc-wheel-sigma-fl', 'Front-left toe σ (°)', { min: 0, max: 30 }),
+      wheelAngleStdDevFR: readInput('mc-wheel-sigma-fr', 'Front-right toe σ (°)', { min: 0, max: 30 }),
+      wheelAngleStdDevRL: readInput('mc-wheel-sigma-rl', 'Rear-left toe σ (°)', { min: 0, max: 30 }),
+      wheelAngleStdDevRR: readInput('mc-wheel-sigma-rr', 'Rear-right toe σ (°)', { min: 0, max: 30 }),
+      frictionMean: readInput('mc-friction-mean', 'Coefficient of friction μ', { min: 0, max: 2 }),
+      frictionStdDev: readInput('mc-friction-sigma', 'Coefficient of friction σ', { min: 0, max: 1 }),
       trackLength: readInput('mc-track', 'Track length (m)', { min: 0, exclusiveMin: true }),
-      runs: Math.round(readInput('mc-runs', 'Number of simulations', { min: 100, max: 1000000 }))
+      runs: Math.round(readInput('mc-runs', 'Number of simulations', { min: 100, max: 1000000 })),
+      thrust: {
+        tau: readInput('mc-tau', 'Thrust decay time constant τ (s)',
+          { min: 0, exclusiveMin: true, max: 5 }),
+        thrustAngle: readInput('mc-thrust-angle', 'Thrust misalignment θ (°)',
+          { min: -89, max: 89 }),
+        co2Mass: TH.THRUST_DEFAULTS.co2Mass,
+        exhaustVelocity: TH.THRUST_DEFAULTS.exhaustVelocity
+      }
     };
   };
 
@@ -178,9 +211,26 @@
       App.renderStatistics();
       App.renderSimulationCharts();
       var d = result.diagnostics;
+      var s = App.state.summary;
+      var note = '';
+      // Excluded trials are never quietly dropped. If any trial failed to reach
+      // the line or could not be integrated, the statistics say so on screen
+      // next to the numbers they were computed without.
+      if (s.excludedCount > 0) {
+        note = ' ' + U.fmtInt(s.excludedCount) + ' trial' +
+               (s.excludedCount === 1 ? '' : 's') + ' excluded from the statistics (' +
+               U.fmtInt(d.didNotFinish) + ' did not reach the line, ' +
+               U.fmtInt(d.diverged) + ' numerically unresolved).';
+      }
       setText('mc-status',
         U.fmtInt(d.runs) + ' trials complete in ' + U.fmtInt(d.elapsedMs) + ' ms — mean ' +
-        U.fmt(App.state.summary.mean, 4) + ' s ± ' + U.fmt(App.state.summary.stdDev, 4) + ' s.');
+        U.fmt(s.mean, 4) + ' s ± ' + U.fmt(s.stdDev, 4) + ' s.' + note);
+      if (s.excludedCount > 0) {
+        setAlert(U.fmtInt(s.excludedCount) + ' of ' + U.fmtInt(d.runs) +
+          ' trials did not produce a finite race time and were left out of every ' +
+          'statistic and chart below. The summary describes the ' +
+          U.fmtInt(s.count) + ' trials that resolved.', 'warn');
+      }
     }).catch(function (err) {
       setText('mc-status', 'Simulation failed — ' + err.message);
       if (root.console && root.console.error) root.console.error(err);
@@ -247,19 +297,76 @@
     App.charts.render('chart-bell', CH.bellCurveConfig(times));
     App.charts.render('chart-cdf', CH.cdfConfig(times));
     App.charts.render('chart-qq', CH.qqConfig(times));
+    App.renderThrustCurve();
     App.observeChartBoxes();
+  };
+
+  /**
+   * Draw the thrust-decay curve from the SAME parameters the run used.
+   * Reading them off App.state.run.config (not off the input fields) means the
+   * curve always depicts the physics that actually produced the statistics
+   * on screen, even if the user has since typed a new value without re-running.
+   */
+  App.renderThrustCurve = function () {
+    if (!App.charts || !App.state.chartLibReady) return;
+    var card = el('thrust-card');
+    if (!card || !App.state.thrustVisible) return;
+    if (!isLaidOut(el('tool-monte'))) return;
+
+    var cfg = App.state.run ? App.state.run.config : null;
+    var peakN = cfg ? cfg.forceMean : DEFAULT_PEAK_THRUST;
+    var tau = cfg ? cfg.thrust.tau : TH.THRUST_DEFAULTS.tau;
+    var angle = cfg ? cfg.thrust.thrustAngle : 0;
+
+    App.charts.render('chart-thrust', CH.thrustCurveConfig({
+      peakN: peakN, tau: tau, thrustAngle: angle
+    }));
+
+    var impulse = peakN * tau * (1 - Math.exp(-TH.BURN_TIME_CONSTANTS));
+    setText('thrust-equation', TH.equationText(peakN, tau));
+    setText('thrust-params',
+      'F₀ = ' + U.fmt(peakN, 2) + ' N · τ = ' + U.fmt(tau, 3) + ' s · ' +
+      'burn 5τ = ' + U.fmt(TH.burnDuration(tau), 2) + ' s · ' +
+      'impulse ≈ ' + U.fmt(impulse, 3) + ' N·s · θ = ' + U.fmt(angle, 1) + '°');
+  };
+
+  /** Show/hide the thrust curve. Hidden by default: the page looks unchanged. */
+  App.toggleThrustCurve = function (visible) {
+    var card = el('thrust-card');
+    if (!card) return;
+    App.state.thrustVisible = visible === undefined
+      ? !App.state.thrustVisible : !!visible;
+
+    var box = el('mc-thrust-toggle');
+    if (box && box.checked !== App.state.thrustVisible) {
+      box.checked = App.state.thrustVisible;
+    }
+    card.style.display = App.state.thrustVisible ? '' : 'none';
+
+    if (App.state.thrustVisible) {
+      // Build synchronously. requestAnimationFrame does not fire while a tab is
+      // backgrounded, so deferring the build meant the chart could stay missing
+      // until the tab was refocused. The rAF is kept only for the resize, which
+      // genuinely needs a completed layout pass.
+      App.renderThrustCurve();
+      root.requestAnimationFrame(function () { App.resizeCharts(['chart-thrust']); });
+    } else {
+      App.charts.destroy('chart-thrust');
+    }
   };
 
   /* ---- Monte Carlo exports ---- */
 
-  App.exportMonteCarloCSV = function () {
-    if (!App.state.run) {
-      setText('mc-status', 'Run the simulation before exporting.');
-      return;
-    }
+  /**
+   * Build the CSV header block from the configuration that actually ran.
+   * Exposed rather than inlined in the export handler so verification can read
+   * the same object the download contains — a test that constructs its own
+   * metadata proves nothing about what users receive.
+   */
+  App.buildTrialMetadata = function () {
+    if (!App.state.run) return null;
     var cfg = App.state.run.config;
-    var stamp = EX.timestampSlug();
-    var metadata = {
+    return {
       generated: new Date().toISOString(),
       runs: cfg.runs,
       track_length_m: cfg.trackLength,
@@ -267,13 +374,47 @@
       drag_mean_cd: cfg.dragMean, drag_sigma_cd: cfg.dragStdDev,
       launch_force_mean_n: cfg.forceMean, launch_force_sigma_n: cfg.forceStdDev,
       reaction_mean_s: cfg.reactionMean, reaction_sigma_s: cfg.reactionStdDev,
+      toe_sigma_front_left_deg: cfg.wheelAngleStdDevFL,
+      toe_sigma_front_right_deg: cfg.wheelAngleStdDevFR,
+      toe_sigma_rear_left_deg: cfg.wheelAngleStdDevRL,
+      toe_sigma_rear_right_deg: cfg.wheelAngleStdDevRR,
+      friction_coefficient_mu: cfg.frictionMean,
+      friction_coefficient_sigma: cfg.frictionStdDev,
+      friction_provenance: cfg.frictionStdDev > 0
+        ? 'user-supplied nominal and spread; sampled per trial'
+        : 'user-supplied nominal, assumed (not measured); held constant across trials',
       air_density_kg_m3: cfg.physics.airDensity,
       frontal_area_m2: cfg.physics.frontalArea,
-      thrust_duration_s: cfg.physics.thrustDuration,
-      model: 'constant thrust + quadratic aerodynamic drag, closed-form solution'
+      scrub_coefficient: cfg.physics.scrubCoefficient,
+      // Every thrust parameter the user can edit, plus the quantities derived
+      // from them, so a CSV can be reproduced without the page.
+      co2_charge_g: cfg.thrust.co2Mass,
+      effective_exhaust_velocity_m_s: cfg.thrust.exhaustVelocity,
+      peak_thrust_n: cfg.forceMean,
+      thrust_decay_tau_s: cfg.thrust.tau,
+      thrust_angle_deg: cfg.thrust.thrustAngle,
+      burn_duration_s: TH.burnDuration(cfg.thrust.tau),
+      delivered_impulse_ns: cfg.forceMean * cfg.thrust.tau *
+        (1 - Math.exp(-TH.BURN_TIME_CONSTANTS)),
+      integration_step_s: cfg.physics.integrationStep,
+      // This string previously read "constant thrust … closed-form solution",
+      // which stopped being true when the time-dependent model landed. An
+      // exported file that misdescribes its own model is a fabricated claim,
+      // so it is now generated from the model that actually ran.
+      model: 'F(t) = F0·exp(-t/tau) truncated at ' + TH.BURN_TIME_CONSTANTS +
+             'tau; quadratic aerodynamic drag; per-wheel scrub; RK4 powered ' +
+             'phase with adaptive substepping, closed-form coast phase',
+      seed: cfg.seed === null ? 'unseeded (system randomness)' : cfg.seed
     };
-    EX.downloadText('silvermach-montecarlo-trials-' + stamp + '.csv',
-      EX.trialsToCSV(App.state.run.trials, { metadata: metadata }));
+  };
+
+  App.exportMonteCarloCSV = function () {
+    if (!App.state.run) {
+      setText('mc-status', 'Run the simulation before exporting.');
+      return;
+    }
+    EX.downloadText('silvermach-montecarlo-trials-' + EX.timestampSlug() + '.csv',
+      EX.trialsToCSV(App.state.run.trials, { metadata: App.buildTrialMetadata() }));
     setText('mc-status', U.fmtInt(App.state.run.trials.count) + ' trial rows exported as CSV.');
   };
 
@@ -314,7 +455,8 @@
     }
     var stamp = EX.timestampSlug();
     var names = { 'chart-hist': 'histogram', 'chart-bell': 'bell-curve',
-                  'chart-cdf': 'cdf', 'chart-qq': 'qq-plot' };
+                  'chart-cdf': 'cdf', 'chart-qq': 'qq-plot',
+                  'chart-thrust': 'thrust-curve' };
     var items = SIM_CHART_IDS.map(function (id) {
       return { chart: App.charts.get(id), filename: 'silvermach-' + names[id] + '-' + stamp + '.png' };
     }).filter(function (i) { return !!i.chart; });
@@ -346,6 +488,178 @@
     if (!node) return;
     node.textContent = message || '';
     node.style.display = message ? 'block' : 'none';
+  };
+
+  /* ---- inline consent / confirmation ---- */
+
+  /**
+   * Ask the viewer a question inside the page's own UI and resolve with the
+   * value of whatever they choose. Deliberately not window.confirm(): a browser
+   * modal sits outside the site's styling and blocks the page.
+   *
+   * @param {string} message
+   * @param {Array<{label:string, value:*, primary?:boolean}>} choices
+   * @returns {Promise<*>} the chosen value
+   */
+  App.askLineage = function (message, choices) {
+    var panel = el('ln-prompt');
+    var msgNode = el('ln-prompt-msg');
+    var actions = el('ln-prompt-actions');
+    if (!panel || !msgNode || !actions) return Promise.resolve(null);
+
+    msgNode.textContent = message;
+    actions.innerHTML = '';
+    panel.style.display = 'block';
+
+    return new Promise(function (resolve) {
+      choices.forEach(function (choice) {
+        var button = root.document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn ' + (choice.primary ? 'btn-primary' : 'btn-ghost');
+        button.textContent = choice.label;
+        button.addEventListener('click', function () {
+          panel.style.display = 'none';
+          actions.innerHTML = '';
+          resolve(choice.value);
+        });
+        actions.appendChild(button);
+      });
+    });
+  };
+
+  App.closeLineagePrompt = function () {
+    var panel = el('ln-prompt');
+    if (panel) panel.style.display = 'none';
+  };
+
+  /* ---- destructive wipe ---- */
+
+  /**
+   * Remove every design from the lineage — user entries, imported values and
+   * the demo seed alike. This clears the underlying store, not the display:
+   * App.state.store is replaced with an empty DesignStore, so nothing survives
+   * behind the visualisation. Any browser-persisted copy is cleared too, even
+   * though this build keeps the lineage in memory only, so the control stays
+   * correct if persistence is added later.
+   */
+  App.wipeLineageData = function () {
+    return App.askLineage(
+      'Are you sure you want to delete all decision-lineage data, including demo values? ' +
+      'This cannot be undone.',
+      [{ label: 'Delete Everything', value: true, primary: true },
+       { label: 'Cancel', value: false }]
+    ).then(function (confirmed) {
+      if (!confirmed) {
+        App.setLineageError('');
+        return false;
+      }
+      App.state.store = new G.DesignStore();
+      App.state.selectedDesignId = null;
+      App.state.pareto = null;
+
+      try {
+        if (root.localStorage) root.localStorage.removeItem(LINEAGE_STORAGE_KEY);
+        if (root.sessionStorage) root.sessionStorage.removeItem(LINEAGE_STORAGE_KEY);
+      } catch (err) {
+        // Private-browsing modes can throw on storage access; the in-memory
+        // wipe above has already happened, so this is not a failure.
+      }
+
+      App.setLineageError('');
+      App.rebuildLineage();
+      return true;
+    });
+  };
+
+  /* ---- Monte Carlo → lineage transfer ---- */
+
+  /** Keys this import can write, in the order they are offered. */
+  var IMPORT_KEYS = ['raceTime', 'friction', 'alignFL', 'alignFR', 'alignRL', 'alignRR'];
+
+  /**
+   * Offer to copy the current Monte Carlo result onto the selected design.
+   *
+   * Nothing moves without explicit consent, and nothing is overwritten without
+   * a second, separate decision. The four wheel angles travel as four values —
+   * their mean toe per corner across the run — never as a single total.
+   */
+  App.importMonteCarloToLineage = function () {
+    var store = App.state.store;
+    if (!store || !store.count()) {
+      App.setLineageError('Add or restore a design before importing Monte Carlo results.');
+      return Promise.resolve(false);
+    }
+    if (!App.state.run || !App.state.summary) {
+      App.setLineageError('Run the Monte Carlo simulation first — there is no result to import.');
+      return Promise.resolve(false);
+    }
+    var design = store.getById(App.state.selectedDesignId) ||
+                 store.getAll()[store.count() - 1];
+    if (!design) return Promise.resolve(false);
+
+    var cfg = App.state.run.config;
+    var trials = App.state.run.trials;
+
+    function meanOf(key) {
+      var total = 0;
+      for (var i = 0; i < trials.count; i++) total += trials[key][i];
+      return trials.count ? total / trials.count : 0;
+    }
+
+    var incoming = {
+      raceTime: App.state.summary.mean,
+      friction: cfg.frictionMean,
+      alignFL: meanOf('wheelFL'),
+      alignFR: meanOf('wheelFR'),
+      alignRL: meanOf('wheelRL'),
+      alignRR: meanOf('wheelRR')
+    };
+
+    var occupied = IMPORT_KEYS.filter(function (k) {
+      return design[k] !== null && design[k] !== undefined;
+    });
+
+    App.setLineageError('');
+    return App.askLineage(
+      'Would you like to add the selected Monte Carlo results to the Decision Lineage Tree? ' +
+      'Race time ' + U.fmt(incoming.raceTime, 4) + ' s, friction μ ' + U.fmt(incoming.friction, 3) +
+      ', and the four wheel angles will be attached to "' + design.name + '".',
+      [{ label: 'Add Data', value: 'yes', primary: true },
+       { label: 'Cancel', value: 'no' }]
+    ).then(function (answer) {
+      if (answer !== 'yes') return false;
+      if (!occupied.length) return App.applyLineageImport(design, incoming, 'replace');
+
+      return App.askLineage(
+        '"' + design.name + '" already has ' + occupied.length +
+        ' of these values recorded. Replace them, keep them and fill only the empty ones, or cancel?',
+        [{ label: 'Replace Existing', value: 'replace', primary: true },
+         { label: 'Fill Empty Only', value: 'fill' },
+         { label: 'Cancel', value: 'cancel' }]
+      ).then(function (mode) {
+        if (mode === 'cancel') return false;
+        return App.applyLineageImport(design, incoming, mode);
+      });
+    });
+  };
+
+  App.applyLineageImport = function (design, incoming, mode) {
+    var patch = {};
+    IMPORT_KEYS.forEach(function (k) {
+      var occupiedHere = design[k] !== null && design[k] !== undefined;
+      if (mode === 'fill' && occupiedHere) return;
+      patch[k] = incoming[k];
+    });
+    try {
+      App.state.store.update(design.id, patch);
+      App.state.selectedDesignId = design.id;
+      App.setLineageError('');
+      App.rebuildLineage();
+      return true;
+    } catch (err) {
+      App.setLineageError('Import failed — ' + err.message);
+      return false;
+    }
   };
 
   App.rebuildLineage = function () {
@@ -466,6 +780,97 @@
     });
   };
 
+  /**
+   * Write the selected node's decision report to a file.
+   *
+   * This does NOT generate a new report. It serialises the object that
+   * DesignStore.inspect() already returns — the same object App.renderDetail()
+   * puts on screen — using the same section headings the panel uses, so the
+   * downloaded text and the on-screen report are the same report. Every number
+   * comes from the existing implementation; nothing is recomputed here.
+   */
+  App.exportDesignReport = function () {
+    var store = App.state.store;
+    if (!store || !store.count()) {
+      App.setLineageError('There is no lineage to report on yet.');
+      return;
+    }
+    var id = App.state.selectedDesignId;
+    if (!id || !store.getById(id)) {
+      App.setLineageError('Select a design in the tree to generate its report.');
+      return;
+    }
+    var r = store.inspect(id, App.state.pareto);
+    var d = r.design;
+    var lines = [];
+
+    lines.push('SILVERMACH — ENGINEERING DECISION LINEAGE');
+    lines.push('Design report: ' + d.name);
+    lines.push('Generated ' + new Date().toISOString());
+    lines.push('');
+    lines.push((r.hasParent ? 'Descendant of ' + r.parent.name : 'Root design') +
+      ' · depth ' + r.depth + ' · ' +
+      (r.isLeaf ? 'lineage tip' : r.children.length + ' child iteration' +
+        (r.children.length === 1 ? '' : 's')) +
+      (r.pareto.onFrontier ? ' · Pareto optimal' : ''));
+    lines.push('');
+
+    function section(title, body) {
+      lines.push(title.toUpperCase());
+      lines.push(body);
+      lines.push('');
+    }
+    section('Why It Evolved', r.whyEvolved);
+    section('Why It Was Selected — Engineering Notes', r.notes);
+    section('Trade-Off Summary', r.tradeOffSummary);
+    section('Pareto Status', r.pareto.status);
+    section('Engineering Recommendation', r.recommendation);
+
+    lines.push('MEASURED METRICS');
+    for (var m = 0; m < r.metrics.length; m++) {
+      var metric = r.metrics[m];
+      lines.push('  ' + metric.label + ': ' + U.fmt(d[metric.key], metric.decimals) +
+        ' ' + (metric.unit === '/10' ? '/ 10' : metric.unit));
+    }
+    lines.push('');
+
+    // The optional simulation/setup data points, when a design carries them.
+    var extras = [];
+    for (var x = 0; x < G.EXTRA_METRICS.length; x++) {
+      var ex = G.EXTRA_METRICS[x];
+      if (d[ex.key] === null || d[ex.key] === undefined) continue;
+      extras.push('  ' + ex.label + ': ' + U.fmt(d[ex.key], ex.decimals) + ' ' + ex.unit);
+    }
+    if (extras.length) {
+      lines.push('SIMULATION & SETUP DATA');
+      lines = lines.concat(extras);
+      lines.push('');
+    }
+
+    if (r.hasParent) {
+      lines.push('CHANGES FROM ' + r.parent.name.toUpperCase());
+      for (var i = 0; i < r.deltas.length; i++) {
+        var k = r.deltas[i];
+        lines.push('  ' + k.label + ': ' + U.fmt(k.from, k.decimals) + ' → ' +
+          U.fmt(k.to, k.decimals) + ' ' + k.unit +
+          (U.isFiniteNumber(k.percent) && k.percent !== 0
+            ? '  (' + (k.percent > 0 ? '+' : '') + U.fmt(k.percent, 1) + '%)' : '') +
+          (k.improved ? '  improved' : (k.worsened ? '  worsened' : '  unchanged')));
+      }
+      lines.push('');
+    }
+
+    lines.push('LINEAGE PATH');
+    lines.push('  ' + r.ancestry.map(function (a) { return a.name; }).join(' → '));
+    lines.push('');
+
+    EX.downloadText(
+      'silvermach-lineage-report-' + d.name.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase() +
+      '-' + EX.timestampSlug() + '.txt',
+      lines.join('\r\n'));
+    App.setLineageError('');
+  };
+
   App.exportLineageCSV = function () {
     if (!App.state.store || !App.state.store.count()) {
       App.setLineageError('There is no lineage to export yet.');
@@ -534,6 +939,27 @@
         '</div>');
     }
 
+    // Additional lineage data points. Rendered with the existing .ld-box and
+    // .ld-metric markup, and only when at least one has been recorded, so a
+    // design that has never had an import attached looks exactly as before.
+    var extraHTML = '';
+    var extraRows = [];
+    for (var x = 0; x < G.EXTRA_METRICS.length; x++) {
+      var ex = G.EXTRA_METRICS[x];
+      var val = d[ex.key];
+      if (val === null || val === undefined) continue;
+      extraRows.push(
+        '<div class="ld-metric">' +
+          '<span>' + escapeHTML(ex.label) + '</span>' +
+          '<span class="ld-metric-value">' + U.fmt(val, ex.decimals) + ' ' +
+            escapeHTML(ex.unit) + '</span>' +
+        '</div>');
+    }
+    if (extraRows.length) {
+      extraHTML = '<div class="ld-box"><b>Simulation &amp; Setup Data</b>' +
+                  '<div class="ld-metrics">' + extraRows.join('') + '</div></div>';
+    }
+
     var lineagePath = report.ancestry.map(function (a) { return escapeHTML(a.name); }).join(' → ');
 
     detail.innerHTML =
@@ -556,6 +982,7 @@
           escapeHTML(report.recommendation) + '</p></div>' +
         '<div class="ld-box"><b>Measured Metrics</b><div class="ld-metrics">' +
           metricRows.join('') + '</div></div>' +
+        extraHTML +
         deltaHTML +
         '<div class="ld-box"><b>Lineage Path</b><p>' + lineagePath + '</p></div>' +
       '</div>';
@@ -751,7 +1178,9 @@
       App.state.chartLibError = null;
 
       root.Chart.defaults.color = CH.THEME.silverDim;
-      root.Chart.defaults.font.family = "'Inter',-apple-system,BlinkMacSystemFont,sans-serif";
+      // Canvas text must request the same typeface as the DOM, otherwise chart
+      // labels stay on the old face while every other element switches.
+      root.Chart.defaults.font.family = CH.FONT_STACK;
       root.Chart.defaults.responsive = true;
       root.Chart.defaults.maintainAspectRatio = false;
 
@@ -789,8 +1218,12 @@
   root.exportMonteCarloSummaryCSV = function () { App.exportMonteCarloSummaryCSV(); };
   root.exportMonteCarloPNG = function () { App.exportMonteCarloPNG(); };
   root.exportChartPNG = function (id, label) { App.exportChartPNG(id, label); };
+  root.toggleThrustCurve = function (v) { App.toggleThrustCurve(v); };
   root.addDesignIteration = function () { App.addDesignIteration(); };
   root.resetLineageDemo = function () { App.resetLineageDemo(); };
+  root.exportDesignReport = function () { App.exportDesignReport(); };
+  root.wipeLineageData = function () { App.wipeLineageData(); };
+  root.importMonteCarloToLineage = function () { App.importMonteCarloToLineage(); };
   root.selectDesign = function (id) { App.selectDesign(id); };
   root.exportTreeSVG = function () { App.exportTreeSVG(); };
   root.exportTreePNG = function () { App.exportTreePNG(); };

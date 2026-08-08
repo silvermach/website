@@ -4,13 +4,15 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Engine Validation Suite — Silver Mach</title>
-<link rel="icon" type="image/png" href="./assets/logo.png">
+<link rel="icon" type="image/png" href="./assets/logo-silvermach.png">
+<!-- Same typeface source of truth as the site: this page is a text surface too. -->
+<link rel="stylesheet" href="./css/fonts.css">
 <style>
   :root{--black:#060708;--panel:#0f1216;--silver:#d2d7dd;--silver-dim:#868c95;
         --cyan:#2ad6ee;--line:#1f242b;--pass:#39d98a;--fail:#ff6b78;--gold:#e8b64c}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--black);color:var(--silver);padding:40px 24px;line-height:1.6;
-       font-family:'Inter',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif}
+       font-family:var(--font-body)}
   .wrap{max-width:1000px;margin:0 auto}
   h1{font-size:26px;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
   .sub{color:var(--silver-dim);font-size:14px;margin-bottom:8px}
@@ -30,7 +32,7 @@
   .pass .tag{color:var(--pass)}
   .fail .tag{color:var(--fail)}
   .case .msg{color:var(--fail);font-size:12.5px;display:block;margin-top:3px;
-             font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+             font-family:var(--font-body)}
   .name{color:var(--silver)}
   .fail .name{color:#fff}
 </style>
@@ -51,6 +53,7 @@
 <!-- Engine modules, dependency order, relative paths. tests.js must come last. -->
 <script src="./js/engine/utils.js"></script>
 <script src="./js/engine/statistics.js"></script>
+<script src="./js/engine/thrust.js"></script>
 <script src="./js/engine/monteCarlo.js"></script>
 <script src="./js/engine/pareto.js"></script>
 <script src="./js/engine/genealogy.js"></script>
